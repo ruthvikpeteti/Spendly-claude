@@ -524,6 +524,39 @@ a { color: inherit; text-decoration: none; }
     .features-inner { grid-template-columns: 1fr; }
 }
 
+/* ------------------------------------------------------------------ */
+/* Legal pages                                                         */
+/* ------------------------------------------------------------------ */
+
+.legal-section {
+    padding: 3rem 2rem;
+}
+
+.legal-container {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.legal-card h2 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--ink);
+    margin: 1.75rem 0 0.5rem;
+}
+
+.legal-card h2:first-child { margin-top: 0; }
+
+.legal-card p,
+.legal-card li {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--ink-soft);
+}
+
+.legal-card p { margin-bottom: 0.75rem; }
+.legal-card ul { margin: 0 0 0.75rem 1.25rem; }
+
 @media (max-width: 600px) {
     .nav-links a:not(.nav-cta) { display: none; }
     .hero { padding: 3rem 1rem 2rem; }
