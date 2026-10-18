@@ -20,7 +20,7 @@ No linter or build step is configured.
 
 ## Architecture
 
-- `app.py` — single Flask app; all routes live here. Real routes just `render_template`. Placeholder routes (`/logout`, `/profile`, `/expenses/add`, `/expenses/<int:id>/edit|delete`) return stub strings labelled with their Step number (3, 4, 7, 8, 9) — replace the stub rather than adding a parallel route.
+- `app.py` — single Flask app; all routes live here. Real routes just `render_template`. Placeholder routes (`/logout`, `/profile`, `/expenses/add`, `/expenses/<int:id>/edit|delete`) return stub strings labelled with their Step number (3, 4, 7, 8, 9) — replace the stub rather than adding a parallel route. Templates link via `url_for('<view function name>')` (`landing`, `login`, `register`, `terms`, `privacy`), so renaming a view function breaks those links.
 - `database/db.py` — currently only a comment spec (Step 1). It is meant to provide `get_db()` (SQLite connection with `row_factory` and foreign keys enabled), `init_db()` (`CREATE TABLE IF NOT EXISTS`), and `seed_db()`. The SQLite file `expense_tracker.db` is gitignored.
 - `templates/base.html` — shared layout (navbar, footer, Google Fonts); pages extend it via `{% block title %}`, `{% block head %}`, `{% block content %}`. Use `url_for(...)` for links and static assets.
 - `static/css/style.css` is the single stylesheet. `static/js/main.js` is essentially empty; the landing-page modal script is inline in `templates/landing.html`.
