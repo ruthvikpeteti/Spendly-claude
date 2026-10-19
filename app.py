@@ -34,11 +34,12 @@ def register():
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
 
     def fail(error):
         return render_template("register.html", error=error, name=name, email=email)
 
-    if not name or not email or not password:
+    if not name or not email or not password or not confirm_password:
         return fail("All fields are required.")
 
     local, _, domain = email.partition("@")
@@ -48,6 +49,9 @@ def register():
 
     if len(password) < 8:
         return fail("Password must be at least 8 characters.")
+
+    if password != confirm_password:
+        return fail("Passwords do not match.")
 
     if get_user_by_email(email):
         return fail("An account with that email already exists.")

@@ -31,6 +31,7 @@ Each helper opens its own connection with `get_db()` and closes it in a `finally
 - **Create:** none
 - **Modify:** `templates/register.html`
   - Change the hardcoded `action="/register"` to `action="{{ url_for('register') }}"`
+  - Add a "Confirm password" field (`name="confirm_password"`, `type="password"`, required) directly after the password field; never re-populate it
   - Re-populate the `name` and `email` inputs from the submitted values after a failed submit (`value="{{ name or '' }}"`, `value="{{ email or '' }}"`); never re-populate the password
 
 ## Files to change
@@ -63,6 +64,7 @@ No new dependencies. `werkzeug.security` is already installed.
   - `name` and `email` are stripped; `name`, `email` and `password` must all be non-empty → "All fields are required."
   - `email` is lower-cased before checking or storing, and must contain `@` with text on both sides and a `.` in the domain → "Enter a valid email address."
   - `password` is at least 8 characters (matches the form placeholder) → "Password must be at least 8 characters."
+  - `password` and `confirm_password` must match exactly → "Passwords do not match."
   - email must not already exist → "An account with that email already exists."
 - Check for a duplicate with `get_user_by_email()` for the friendly message, and also catch `sqlite3.IntegrityError` around `create_user()` so a race on the UNIQUE constraint does not produce a 500
 - Reuse the existing `.auth-error` class for errors; add no new CSS unless strictly needed, and if so put it in `static/css/style.css` using the existing variables
@@ -79,6 +81,7 @@ No new dependencies. `werkzeug.security` is already installed.
 - [ ] Submitting with any empty field shows "All fields are required." and creates no row
 - [ ] An email such as `foo` or `foo@bar` shows "Enter a valid email address."
 - [ ] A 7-character password shows "Password must be at least 8 characters."
+- [ ] Mismatched password and confirm password shows "Passwords do not match." and creates no row
 - [ ] After any failed submit the name and email fields keep their values and the password field is empty
 - [ ] The existing demo user (`demo@spendly.com`) is untouched
 - [ ] `grep` of the changes shows no f-string or `%` formatting inside any SQL statement
