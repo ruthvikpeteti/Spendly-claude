@@ -52,8 +52,8 @@ spendly/
 |---|---|
 | `GET /` | Implemented — renders `landing.html` |
 | `GET /register` | Implemented — renders `register.html` |
-| `GET /login` | Implemented — renders `login.html` |
-| `GET /logout` | Stub — Step 3 |
+| `GET/POST /login` | Implemented — renders `login.html`, verifies credentials, sets session |
+| `GET /logout` | Implemented — clears session, redirects to `/` |
 | `GET /profile` | Stub — Step 4 |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
@@ -79,7 +79,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms and privacy pages are implemented as static templates. Auth, the database and expense CRUD are still stubs, labelled "Step N" in the code.
+Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms and privacy pages are implemented, and login/logout use Flask's cookie session. Profile and expense CRUD are still stubs, labelled "Step N" in the code.
 
 ## Commands
 
@@ -95,7 +95,7 @@ There is no linter, formatter or build step.
 
 ## Architecture
 
-- `app.py` is the whole backend: one `Flask` app with every route. Implemented routes only call `render_template`. The placeholder routes (`/logout`, `/profile`, `/expenses/add`, `/expenses/<int:id>/edit`, `/expenses/<int:id>/delete`) return a "coming in Step N" string; replace the stub body in place.
+- `app.py` is the whole backend: one `Flask` app with every route. Implemented routes only call `render_template`. The placeholder routes (`/profile`, `/expenses/add`, `/expenses/<int:id>/edit`, `/expenses/<int:id>/delete`) return a "coming in Step N" string; replace the stub body in place.
 - Templates link with `url_for('<view function name>')`, so renaming a view function breaks them. Keep names such as `landing`, `login`, `register`, `terms` and `privacy`.
 - `database/db.py` holds only a comment spec for Step 1. It should provide `get_db()` (SQLite with `row_factory` and foreign keys on), `init_db()` (`CREATE TABLE IF NOT EXISTS`) and `seed_db()`. The DB file `expense_tracker.db` is gitignored.
 - `templates/base.html` is the shared layout (navbar, footer, Google Fonts). Pages extend it using the `title`, `head`, `content` and `scripts` blocks.
