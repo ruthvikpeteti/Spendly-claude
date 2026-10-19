@@ -58,6 +58,31 @@ def init_db():
         conn.close()
 
 
+def get_user_by_email(email):
+    """Return the user row matching email, or None."""
+    conn = get_db()
+    try:
+        return conn.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def create_user(name, email, password):
+    """Insert a user with a hashed password and return the new id."""
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+            (name, email, generate_password_hash(password)),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
+
+
 def seed_db():
     """Insert demo data once; does nothing if users already exist."""
     conn = get_db()
