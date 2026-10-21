@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
@@ -11,6 +12,12 @@ from database.db import (
     init_db,
     seed_db,
 )
+from database.queries import (
+    get_category_breakdown,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+)
 
 app = Flask(__name__)
 # Development-only fallback; set SECRET_KEY in the environment for real use.
@@ -21,56 +28,25 @@ with app.app_context():
     seed_db()
 
 
-# ------------------------------------------------------------------ #
-# Profile page sample data — replaced by DB queries in Step 5         #
-# ------------------------------------------------------------------ #
-
-PROFILE_USER = {
-    "name": "Demo User",
-    "email": "demo@spendly.com",
-    "member_since": "January 2026",
-}
-
-PROFILE_STATS = {
-    "total_spent": 18240,
-    "transaction_count": 42,
-    "top_category": "Food",
-}
-
-PROFILE_CATEGORIES = [
-    {"name": "Food", "total": 5420, "percent": 30},
-    {"name": "Bills", "total": 4800, "percent": 26},
-    {"name": "Shopping", "total": 3150, "percent": 17},
-    {"name": "Transport", "total": 2260, "percent": 12},
-    {"name": "Entertainment", "total": 1500, "percent": 8},
-    {"name": "Health", "total": 1110, "percent": 6},
-]
-
-PROFILE_TRANSACTIONS = [
-    {"date": "18 Oct", "description": "Groceries", "category": "Food", "amount": 1240},
-    {"date": "16 Oct", "description": "Electricity bill", "category": "Bills", "amount": 2100},
-    {"date": "14 Oct", "description": "Metro card top-up", "category": "Transport", "amount": 500},
-    {"date": "12 Oct", "description": "Sneakers", "category": "Shopping", "amount": 2450},
-    {"date": "09 Oct", "description": "Movie night", "category": "Entertainment", "amount": 650},
-    {"date": "07 Oct", "description": "Pharmacy", "category": "Health", "amount": 380},
-    {"date": "05 Oct", "description": "Dinner with friends", "category": "Food", "amount": 1150},
-    {"date": "02 Oct", "description": "Internet bill", "category": "Bills", "amount": 999},
-]
-
-
 @app.template_filter("inr")
 def inr(value):
-    """Format a number as rupees with Indian digit grouping: 1234567 -> ₹12,34,567."""
+    """Format a number as rupees with Indian digit grouping: 1234567.5 -> ₹12,34,567.50."""
     sign = "-" if value < 0 else ""
-    digits = str(int(abs(value)))
-    head, tail = digits[:-3], digits[-3:]
+    whole, _, paise = f"{abs(value):.2f}".partition(".")
+    head, tail = whole[:-3], whole[-3:]
     groups = []
     while len(head) > 2:
         groups.insert(0, head[-2:])
         head = head[:-2]
     if head:
         groups.insert(0, head)
-    return f"{sign}₹{','.join(groups + [tail])}"
+    return f"{sign}₹{','.join(groups + [tail])}.{paise}"
+
+
+@app.template_filter("short_date")
+def short_date(value):
+    """Format an ISO date: 2026-10-18 -> 18 Oct."""
+    return datetime.strptime(value, "%Y-%m-%d").strftime("%d %b")
 
 
 # ------------------------------------------------------------------ #
@@ -172,13 +148,18 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
-    user = {**PROFILE_USER, "name": session.get("user_name", PROFILE_USER["name"])}
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
     return render_template(
         "profile.html",
         user=user,
-        stats=PROFILE_STATS,
-        categories=PROFILE_CATEGORIES,
-        transactions=PROFILE_TRANSACTIONS,
+        stats=get_summary_stats(user_id),
+        categories=get_category_breakdown(user_id),
+        transactions=get_recent_transactions(user_id),
     )
 
 
