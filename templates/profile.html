@@ -50,7 +50,7 @@
         </div>
         <div class="stat-tile">
             <p class="stat-label">Top category</p>
-            <p class="stat-value stat-value-badge">{{ category_badge(stats.top_category) }}</p>
+            <p class="stat-value stat-value-badge">{% if stats.top_category == "—" %}—{% else %}{{ category_badge(stats.top_category) }}{% endif %}</p>
         </div>
     </section>
 
@@ -71,7 +71,7 @@
                 <tbody>
                     {% for t in transactions %}
                     <tr>
-                        <td class="txn-date">{{ t.date }}</td>
+                        <td class="txn-date">{{ t.date | short_date }}</td>
                         <td class="txn-desc">{{ t.description }}</td>
                         <td class="txn-cat">{{ category_badge(t.category) }}</td>
                         <td class="amount">{{ t.amount | inr }}</td>
@@ -92,9 +92,9 @@
                 <li class="breakdown-row">
                     <div class="breakdown-head">
                         <span class="breakdown-name">{{ category_icon(c.name) }}{{ c.name }}</span>
-                        <span class="breakdown-amount">{{ c.total | inr }} <span class="breakdown-percent">{{ c.percent }}%</span></span>
+                        <span class="breakdown-amount">{{ c.amount | inr }} <span class="breakdown-percent">{{ c.pct }}%</span></span>
                     </div>
-                    <progress class="breakdown-bar" max="100" value="{{ c.percent }}" aria-label="{{ c.name }} share of spending">{{ c.percent }}%</progress>
+                    <progress class="breakdown-bar" max="100" value="{{ c.pct }}" aria-label="{{ c.name }} share of spending">{{ c.pct }}%</progress>
                 </li>
                 {% endfor %}
             </ul>

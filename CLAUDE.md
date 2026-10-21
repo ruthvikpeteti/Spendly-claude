@@ -54,7 +54,7 @@ spendly/
 | `GET /register` | Implemented — renders `register.html` |
 | `GET/POST /login` | Implemented — renders `login.html`, verifies credentials, sets session |
 | `GET /logout` | Implemented — clears session, redirects to `/` |
-| `GET /profile` | Implemented — renders `profile.html` with hardcoded sample data (real data in Step 5); redirects to `/login` when logged out |
+| `GET /profile` | Implemented — renders `profile.html` with the logged-in user's real data from `database/queries.py`; redirects to `/login` when logged out |
 | `GET /expenses/add` | Stub — Step 7 |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
@@ -67,10 +67,9 @@ spendly/
 
 - **Never use raw string returns for stub routes** once a step is implemented — always render a template
 - **Never hardcode URLs** in templates — always use `url_for()`
-- **Never put DB logic in route functions** — it belongs in `database/db.py`
+- **Never put DB logic in route functions** — it belongs in `database/db.py` (schema, users, seeding) or `database/queries.py` (read-only profile queries)
 - **Never install new packages** mid-feature without flagging it — keep `requirements.txt` in sync
 - **Never use JS frameworks** — the frontend is intentionally vanilla
-- **`database/db.py` is currently empty** — do not assume helpers exist until the step that implements them
 - **FK enforcement is manual** — SQLite foreign keys are off by default; `get_db()` must run `PRAGMA foreign_keys = ON` on every connection
 - The app runs on **port 5001**, not the Flask default 5000 — don't change this
 
@@ -79,7 +78,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms, privacy and profile pages are implemented, and login/logout use Flask's cookie session. The profile page shows hardcoded sample data until Step 5. Expense CRUD is still stubs, labelled "Step N" in the code.
+Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms, privacy and profile pages are implemented, and login/logout use Flask's cookie session. The profile page shows the logged-in user's real data (Step 5). Expense CRUD is still stubs, labelled "Step N" in the code.
 
 ## Commands
 
@@ -87,7 +86,7 @@ Spendly: a Flask expense tracker structured as a step-by-step teaching project. 
 python -m venv venv && source venv/bin/activate   # venv/ is gitignored
 pip install -r requirements.txt                   # flask, werkzeug, pytest, pytest-flask
 python app.py                                     # dev server, debug on, http://localhost:5001
-pytest                                            # all tests (none exist yet)
+pytest                                            # all tests (tests/ uses a throwaway temp DB)
 pytest path/to/test_file.py::test_name            # a single test
 ```
 
@@ -97,7 +96,8 @@ There is no linter, formatter or build step.
 
 - `app.py` is the whole backend: one `Flask` app with every route. Implemented routes only call `render_template`. The placeholder routes (`/expenses/add`, `/expenses/<int:id>/edit`, `/expenses/<int:id>/delete`) return a "coming in Step N" string; replace the stub body in place.
 - Templates link with `url_for('<view function name>')`, so renaming a view function breaks them. Keep names such as `landing`, `login`, `register`, `terms` and `privacy`.
-- `database/db.py` holds only a comment spec for Step 1. It should provide `get_db()` (SQLite with `row_factory` and foreign keys on), `init_db()` (`CREATE TABLE IF NOT EXISTS`) and `seed_db()`. The DB file `expense_tracker.db` is gitignored.
+- `database/db.py` provides `get_db()` (SQLite with `row_factory` and foreign keys on), `init_db()` (`CREATE TABLE IF NOT EXISTS`), `seed_db()`, `get_user_by_email()` and `create_user()`. The DB file `expense_tracker.db` is gitignored.
+- `database/queries.py` holds the read-only profile queries (`get_user_by_id`, `get_summary_stats`, `get_recent_transactions`, `get_category_breakdown`). No Flask imports; each opens and closes its own connection.
 - `templates/base.html` is the shared layout (navbar, footer, Google Fonts). Pages extend it using the `title`, `head`, `content` and `scripts` blocks.
 - `static/css/style.css` is the only stylesheet. Page-specific JS goes in the page's `{% block scripts %}`; the landing-page video modal is inline in `templates/landing.html`. `static/js/main.js` is an empty placeholder loaded on every page.
 
