@@ -1,12 +1,23 @@
 import calendar
+import math
 import os
 import sqlite3
 from datetime import date, datetime
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash
 
 from database.db import (
+    CATEGORIES,
+    create_expense,
     create_user,
     get_db,
     get_user_by_email,
@@ -70,6 +81,43 @@ def parse_date_range(args):
     if start and end and start > end:
         return None, None, "Start date must be on or before end date."
     return start, end, None
+
+
+def validate_expense_form(form):
+    """Read the add-expense form as (values, error).
+
+    values holds the cleaned fields (amount is a float once valid, else the
+    raw text) so the form can be re-rendered; error is the first failing
+    rule's message, or None when everything is valid.
+    """
+    values = {
+        "amount": form.get("amount", "").strip(),
+        "category": form.get("category", "").strip(),
+        "date": form.get("date", "").strip(),
+        "description": form.get("description", "").strip(),
+    }
+
+    try:
+        amount = float(values["amount"])
+    except ValueError:
+        return values, "Enter an amount greater than 0."
+    if not math.isfinite(amount) or amount <= 0:
+        return values, "Enter an amount greater than 0."
+
+    if values["category"] not in CATEGORIES:
+        return values, "Choose a category from the list."
+
+    try:
+        datetime.strptime(values["date"], "%Y-%m-%d")
+    except ValueError:
+        return values, "Enter a valid date."
+
+    if len(values["description"]) > 200:
+        return values, "Description must be 200 characters or fewer."
+
+    values["amount"] = amount
+    values["description"] = values["description"] or None
+    return values, None
 
 
 def date_presets(today):
@@ -232,9 +280,39 @@ def profile():
     )
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=CATEGORIES,
+            values={"date": date.today().isoformat()},
+        )
+
+    values, error = validate_expense_form(request.form)
+    if error:
+        return render_template(
+            "add_expense.html", categories=CATEGORIES, values=values, error=error
+        )
+
+    create_expense(
+        session["user_id"],
+        values["amount"],
+        values["category"],
+        values["date"],
+        values["description"],
+    )
+    message = (
+        f"Expense added: {inr(values['amount'])} · {values['category']} · "
+        f"{short_date(values['date'])}"
+    )
+    if values["description"]:
+        message += f" · {values['description']}"
+    flash(message, "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")
