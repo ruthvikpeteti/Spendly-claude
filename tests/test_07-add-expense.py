@@ -695,22 +695,15 @@ class TestAddExpenseNavigation:
 # ------------------------------------------------------------------ #
 
 class TestStubsUntouched:
-    def test_edit_stub_still_returns_step_8_placeholder(self, demo_client):
-        response = demo_client.get(url("edit_expense", id=1))
-
-        assert response.status_code == 200
-        assert b"Step 8" in response.data
-
     def test_delete_stub_still_returns_step_9_placeholder(self, demo_client):
         response = demo_client.get(url("delete_expense", id=1))
 
         assert response.status_code == 200
         assert b"Step 9" in response.data
 
-    def test_edit_and_delete_stubs_do_not_modify_expenses(self, demo_client):
+    def test_delete_stub_does_not_modify_expenses(self, demo_client):
         before = expense_count()
 
-        demo_client.get(url("edit_expense", id=1))
         demo_client.get(url("delete_expense", id=1))
 
         assert expense_count() == before

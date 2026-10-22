@@ -224,6 +224,5 @@ def test_navbar_hides_link_when_logged_out(client):
     assert "/expenses/add" not in html
 
 
-def test_edit_and_delete_stubs_untouched(client):
-    assert b"Step 8" in client.get("/expenses/1/edit").data
+def test_delete_stub_untouched(client):
     assert b"Step 9" in client.get("/expenses/1/delete").data

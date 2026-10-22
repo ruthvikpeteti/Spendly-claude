@@ -24,7 +24,7 @@ def test_transactions_demo_user_returns_all_with_keys(demo_user_id):
     rows = queries.get_recent_transactions(demo_user_id)
     assert len(rows) == 8
     for row in rows:
-        assert set(row) == {"date", "description", "category", "amount"}
+        assert set(row) == {"id", "date", "description", "category", "amount"}
         assert isinstance(row["amount"], float)
         assert len(row["date"]) == 10 and row["date"][4] == "-"
 

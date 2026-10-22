@@ -1007,6 +1007,12 @@ body.modal-open { overflow: hidden; }
 
 .txn-date { white-space: nowrap; color: var(--ink-muted); }
 
+.txn-table .txn-actions {
+    text-align: right;
+    padding-right: 0;
+    white-space: nowrap;
+}
+
 /* Category breakdown */
 
 .breakdown-list {
@@ -1106,7 +1112,8 @@ body.modal-open { overflow: hidden; }
         grid-template-columns: 1fr auto;
         grid-template-areas:
             "desc amount"
-            "date cat";
+            "date cat"
+            "actions actions";
         align-items: center;
         gap: 0.5rem 1rem;
         padding: 0.75rem 0;
@@ -1124,4 +1131,5 @@ body.modal-open { overflow: hidden; }
     .txn-table .amount { grid-area: amount; }
     .txn-date { grid-area: date; font-size: 0.8rem; }
     .txn-cat { grid-area: cat; justify-self: end; }
+    .txn-table .txn-actions { grid-area: actions; justify-self: end; }
 }
