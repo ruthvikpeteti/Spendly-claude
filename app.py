@@ -6,6 +6,7 @@ from datetime import date, datetime
 
 from flask import (
     Flask,
+    abort,
     flash,
     redirect,
     render_template,
@@ -23,9 +24,11 @@ from database.db import (
     get_user_by_email,
     init_db,
     seed_db,
+    update_expense,
 )
 from database.queries import (
     get_category_breakdown,
+    get_expense_by_id,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
@@ -149,6 +152,7 @@ def date_presets(today):
 # Routes                                                              #
 # ------------------------------------------------------------------ #
 
+
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -233,6 +237,7 @@ def privacy():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -315,9 +320,52 @@ def add_expense():
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id, session["user_id"])
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            categories=CATEGORIES,
+            values=expense,
+        )
+
+    values, error = validate_expense_form(request.form)
+    if error:
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            categories=CATEGORIES,
+            values=values,
+            error=error,
+        )
+
+    updated = update_expense(
+        id,
+        session["user_id"],
+        values["amount"],
+        values["category"],
+        values["date"],
+        values["description"],
+    )
+    if not updated:
+        abort(404)
+
+    message = (
+        f"Expense updated: {inr(values['amount'])} · {values['category']} · "
+        f"{short_date(values['date'])}"
+    )
+    if values["description"]:
+        message += f" · {values['description']}"
+    flash(message, "success")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/delete")

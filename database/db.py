@@ -98,6 +98,21 @@ def create_expense(user_id, amount, category, date, description):
         conn.close()
 
 
+def update_expense(expense_id, user_id, amount, category, date, description):
+    """Update an expense owned by user_id; return True if a row changed."""
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "UPDATE expenses SET amount = ?, category = ?, date = ?, "
+            "description = ? WHERE id = ? AND user_id = ?",
+            (amount, category, date, description, expense_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
 def seed_db():
     """Insert demo data once; does nothing if users already exist."""
     conn = get_db()

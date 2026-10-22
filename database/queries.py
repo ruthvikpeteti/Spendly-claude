@@ -25,6 +25,7 @@ def _date_clause(start_date, end_date):
 # User and summary stats                                              #
 # ------------------------------------------------------------------ #
 
+
 def get_user_by_id(user_id):
     """Return {name, email, member_since} for user_id, or None if unknown."""
     conn = get_db()
@@ -83,6 +84,7 @@ def get_summary_stats(user_id, start_date=None, end_date=None):
 # Transaction history                                                 #
 # ------------------------------------------------------------------ #
 
+
 def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
     """Return the user's newest expenses as a list of dicts.
 
@@ -92,7 +94,7 @@ def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
     conn = get_db()
     try:
         rows = conn.execute(
-            "SELECT date, description, category, amount FROM expenses "
+            "SELECT id, date, description, category, amount FROM expenses "
             "WHERE user_id = ?" + clause +
             " ORDER BY date DESC, id DESC LIMIT ?",
             (user_id, *params, limit),
@@ -101,6 +103,7 @@ def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
         conn.close()
     return [
         {
+            "id": row["id"],
             "date": row["date"],
             "description": row["description"],
             "category": row["category"],
@@ -110,9 +113,33 @@ def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
     ]
 
 
+def get_expense_by_id(expense_id, user_id):
+    """Return the expense as a dict if it belongs to user_id, else None."""
+    conn = get_db()
+    try:
+        row = conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses "
+            "WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if row is None:
+        return None
+    return {
+        "id": row["id"],
+        "amount": float(row["amount"]),
+        "category": row["category"],
+        "date": row["date"],
+        "description": row["description"],
+    }
+
+
 # ------------------------------------------------------------------ #
 # Category breakdown                                                  #
 # ------------------------------------------------------------------ #
+
 
 def get_category_breakdown(user_id, start_date=None, end_date=None):
     """Return [{name, amount, pct}] ordered by amount descending.
