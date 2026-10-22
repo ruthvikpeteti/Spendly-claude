@@ -55,7 +55,7 @@ spendly/
 | `GET/POST /login` | Implemented — renders `login.html`, verifies credentials, sets session |
 | `GET /logout` | Implemented — clears session, redirects to `/` |
 | `GET /profile` | Implemented — renders `profile.html` with the logged-in user's real data from `database/queries.py`; redirects to `/login` when logged out |
-| `GET /expenses/add` | Stub — Step 7 |
+| `GET/POST /expenses/add` | Implemented — renders `add_expense.html`, validates the form, inserts via `create_expense()`, redirects to `/profile`; redirects to `/login` when logged out |
 | `GET /expenses/<id>/edit` | Stub — Step 8 |
 | `GET /expenses/<id>/delete` | Stub — Step 9 |
 
@@ -78,7 +78,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms, privacy and profile pages are implemented, and login/logout use Flask's cookie session. The profile page shows the logged-in user's real data (Step 5). Expense CRUD is still stubs, labelled "Step N" in the code.
+Spendly: a Flask expense tracker structured as a step-by-step teaching project. The landing, login, register, terms, privacy and profile pages are implemented, and login/logout use Flask's cookie session. The profile page shows the logged-in user's real data (Step 5). Adding expenses works (Step 7); edit and delete are still stubs, labelled "Step N" in the code.
 
 ## Commands
 
@@ -94,9 +94,9 @@ There is no linter, formatter or build step.
 
 ## Architecture
 
-- `app.py` is the whole backend: one `Flask` app with every route. Implemented routes only call `render_template`. The placeholder routes (`/expenses/add`, `/expenses/<int:id>/edit`, `/expenses/<int:id>/delete`) return a "coming in Step N" string; replace the stub body in place.
+- `app.py` is the whole backend: one `Flask` app with every route. Implemented routes only call `render_template`. The placeholder routes (`/expenses/<int:id>/edit`, `/expenses/<int:id>/delete`) return a "coming in Step N" string; replace the stub body in place.
 - Templates link with `url_for('<view function name>')`, so renaming a view function breaks them. Keep names such as `landing`, `login`, `register`, `terms` and `privacy`.
-- `database/db.py` provides `get_db()` (SQLite with `row_factory` and foreign keys on), `init_db()` (`CREATE TABLE IF NOT EXISTS`), `seed_db()`, `get_user_by_email()` and `create_user()`. The DB file `expense_tracker.db` is gitignored.
+- `database/db.py` provides `get_db()` (SQLite with `row_factory` and foreign keys on), `init_db()` (`CREATE TABLE IF NOT EXISTS`), `seed_db()`, `get_user_by_email()`, `create_user()` and `create_expense()`. The DB file `expense_tracker.db` is gitignored.
 - `database/queries.py` holds the read-only profile queries (`get_user_by_id`, `get_summary_stats`, `get_recent_transactions`, `get_category_breakdown`). No Flask imports; each opens and closes its own connection.
 - `templates/base.html` is the shared layout (navbar, footer, Google Fonts). Pages extend it using the `title`, `head`, `content` and `scripts` blocks.
 - `static/css/style.css` is the only stylesheet. Page-specific JS goes in the page's `{% block scripts %}`; the landing-page video modal is inline in `templates/landing.html`. `static/js/main.js` is an empty placeholder loaded on every page.

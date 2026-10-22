@@ -39,6 +39,10 @@
         <span class="profile-since">Member since {{ user.member_since }}</span>
     </section>
 
+    {% for message in get_flashed_messages(category_filter=["success"]) %}
+    <p class="flash-success" role="status">{{ message }}</p>
+    {% endfor %}
+
     <section class="date-filter" aria-label="Filter by date">
         <div class="date-filter-head">
             <nav class="preset-tabs" aria-label="Quick date ranges">
@@ -103,7 +107,10 @@
     <div class="profile-grid">
 
         <section class="panel" aria-labelledby="transactions-title">
-            <h2 class="panel-title" id="transactions-title">Recent transactions</h2>
+            <div class="panel-head">
+                <h2 class="panel-title" id="transactions-title">Recent transactions</h2>
+                <a class="btn-ghost" href="{{ url_for('add_expense') }}">Add Expense</a>
+            </div>
             {% if transactions %}
             <table class="txn-table">
                 <thead>
