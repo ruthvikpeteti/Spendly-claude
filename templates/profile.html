@@ -39,6 +39,52 @@
         <span class="profile-since">Member since {{ user.member_since }}</span>
     </section>
 
+    <section class="date-filter" aria-label="Filter by date">
+        <div class="date-filter-head">
+            <nav class="preset-tabs" aria-label="Quick date ranges">
+                {% for preset in presets %}
+                <a class="preset-tab{% if preset.active %} is-active{% endif %}"
+                   href="{{ url_for('profile', start=preset.start, end=preset.end) }}"
+                   {%- if preset.active %} aria-current="true"{% endif %}>{{ preset.label }}</a>
+                {% endfor %}
+                <a class="preset-tab{% if custom_active %} is-active{% endif %}"
+                   href="{{ url_for('profile', range='custom', start=start, end=end) }}"
+                   {%- if custom_active %} aria-current="true"{% endif %}>Custom</a>
+            </nav>
+            {% if filtered %}
+            <p class="filter-range">
+                {%- if start and end %}Showing {{ start | short_date }} – {{ end | short_date }}
+                {%- elif start %}Showing from {{ start | short_date }}
+                {%- else %}Showing up to {{ end | short_date }}{% endif -%}
+            </p>
+            {% endif %}
+        </div>
+
+        {% if custom_active %}
+        <form class="date-filter-form" method="get" action="{{ url_for('profile') }}">
+            <input type="hidden" name="range" value="custom">
+            <div class="date-filter-field">
+                <label for="filter-start">From</label>
+                <input class="form-input" type="date" id="filter-start" name="start" value="{{ start or '' }}">
+            </div>
+            <div class="date-filter-field">
+                <label for="filter-end">To</label>
+                <input class="form-input" type="date" id="filter-end" name="end" value="{{ end or '' }}">
+            </div>
+            <div class="date-filter-actions">
+                <button type="submit" class="btn-primary">Apply</button>
+                {% if filtered %}
+                <a class="btn-ghost" href="{{ url_for('profile', range='custom') }}">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+        {% endif %}
+    </section>
+
+    {% if error %}
+    <p class="filter-error" role="alert">{{ error }}</p>
+    {% endif %}
+
     <section class="profile-stats" aria-label="Spending summary">
         <div class="stat-tile">
             <p class="stat-label">Total spent</p>
@@ -80,7 +126,7 @@
                 </tbody>
             </table>
             {% else %}
-            <p class="empty-state">No transactions yet.</p>
+            <p class="empty-state">{% if filtered %}No transactions in this date range.{% else %}No transactions yet.{% endif %}</p>
             {% endif %}
         </section>
 
@@ -99,7 +145,7 @@
                 {% endfor %}
             </ul>
             {% else %}
-            <p class="empty-state">No spending to break down yet.</p>
+            <p class="empty-state">{% if filtered %}No spending in this date range.{% else %}No spending to break down yet.{% endif %}</p>
             {% endif %}
         </section>
 

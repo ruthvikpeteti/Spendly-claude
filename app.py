@@ -1,6 +1,7 @@
+import calendar
 import os
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
@@ -47,6 +48,53 @@ def inr(value):
 def short_date(value):
     """Format an ISO date: 2026-10-18 -> 18 Oct."""
     return datetime.strptime(value, "%Y-%m-%d").strftime("%d %b")
+
+
+def parse_date_range(args):
+    """Read the optional start/end query params as (start, end, error).
+
+    Dates are ISO YYYY-MM-DD strings. On any invalid input both bounds are
+    dropped so the page falls back to unfiltered data.
+    """
+    bounds = []
+    for key in ("start", "end"):
+        value = args.get(key, "").strip()
+        if value:
+            try:
+                datetime.strptime(value, "%Y-%m-%d")
+            except ValueError:
+                return None, None, "Enter dates as YYYY-MM-DD."
+        bounds.append(value or None)
+
+    start, end = bounds
+    if start and end and start > end:
+        return None, None, "Start date must be on or before end date."
+    return start, end, None
+
+
+def date_presets(today):
+    """Return the quick-select ranges as [{label, start, end}].
+
+    "All time" has no bounds. "This month" runs from the 1st to the last day
+    of the current month; "Last 3 months" starts on the 1st of the month two
+    months back and ends on the same last day.
+    """
+    month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    months_back = today.year * 12 + today.month - 1 - 2
+    three_months_start = date(months_back // 12, months_back % 12 + 1, 1)
+    return [
+        {"label": "All time", "start": None, "end": None},
+        {
+            "label": "This month",
+            "start": today.replace(day=1).isoformat(),
+            "end": month_end.isoformat(),
+        },
+        {
+            "label": "Last 3 months",
+            "start": three_months_start.isoformat(),
+            "end": month_end.isoformat(),
+        },
+    ]
 
 
 # ------------------------------------------------------------------ #
@@ -154,12 +202,33 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
+    start, end, error = parse_date_range(request.args)
+    presets = date_presets(date.today())
+    matched = next(
+        (p for p in presets if (p["start"], p["end"]) == (start, end)), None
+    )
+    # The date inputs show only for a range no preset covers, after a click
+    # on "Custom", or when the entered dates were rejected.
+    custom_active = (
+        request.args.get("range") == "custom" or error is not None or matched is None
+    )
+    for preset in presets:
+        preset["active"] = preset is matched and not custom_active
+
     return render_template(
         "profile.html",
         user=user,
-        stats=get_summary_stats(user_id),
-        categories=get_category_breakdown(user_id),
-        transactions=get_recent_transactions(user_id),
+        stats=get_summary_stats(user_id, start, end),
+        categories=get_category_breakdown(user_id, start, end),
+        transactions=get_recent_transactions(
+            user_id, start_date=start, end_date=end
+        ),
+        start=start,
+        end=end,
+        error=error,
+        filtered=bool(start or end),
+        presets=presets,
+        custom_active=custom_active,
     )
 
 
