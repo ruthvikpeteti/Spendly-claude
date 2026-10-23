@@ -113,6 +113,20 @@ def update_expense(expense_id, user_id, amount, category, date, description):
         conn.close()
 
 
+def remove_expense(expense_id, user_id):
+    """Delete an expense owned by user_id; return True if a row was removed."""
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user_id),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
 def seed_db():
     """Insert demo data once; does nothing if users already exist."""
     conn = get_db()
