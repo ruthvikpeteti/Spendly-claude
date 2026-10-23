@@ -695,13 +695,13 @@ class TestAddExpenseNavigation:
 # ------------------------------------------------------------------ #
 
 class TestStubsUntouched:
-    def test_delete_stub_still_returns_step_9_placeholder(self, demo_client):
+    def test_delete_route_renders_confirmation_page(self, demo_client):
         response = demo_client.get(url("delete_expense", id=1))
 
         assert response.status_code == 200
-        assert b"Step 9" in response.data
+        assert b"Delete expense" in response.data
 
-    def test_delete_stub_does_not_modify_expenses(self, demo_client):
+    def test_delete_route_get_does_not_modify_expenses(self, demo_client):
         before = expense_count()
 
         demo_client.get(url("delete_expense", id=1))

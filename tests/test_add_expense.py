@@ -224,5 +224,7 @@ def test_navbar_hides_link_when_logged_out(client):
     assert "/expenses/add" not in html
 
 
-def test_delete_stub_untouched(client):
-    assert b"Step 9" in client.get("/expenses/1/delete").data
+def test_delete_requires_login(client):
+    response = client.get("/expenses/1/delete")
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]

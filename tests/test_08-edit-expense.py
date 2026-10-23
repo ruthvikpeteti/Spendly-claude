@@ -1028,20 +1028,22 @@ def owner_client_pair(client, owner_id, expense_id):
 
 
 # ------------------------------------------------------------------ #
-# Scope guard: delete route is still the Step 9 placeholder           #
+# Scope guard: GET on the delete route never modifies data             #
 # ------------------------------------------------------------------ #
 
 
 class TestDeleteRouteUntouched:
-    def test_delete_route_is_still_step_9_placeholder(self, client, expense_id):
+    def test_delete_route_renders_confirmation_page(self, owner_client, expense_id):
         with flask_app.test_request_context():
             url = url_for("delete_expense", id=expense_id)
-        response = client.get(url)
+        response = owner_client.get(url)
         assert response.status_code == 200
-        assert b"Step 9" in response.data
+        assert b"Delete expense" in response.data
 
-    def test_delete_route_does_not_delete_the_expense(self, client, expense_id):
+    def test_delete_route_get_does_not_delete_the_expense(
+        self, owner_client, expense_id
+    ):
         with flask_app.test_request_context():
             url = url_for("delete_expense", id=expense_id)
-        client.get(url)
+        owner_client.get(url)
         assert row_of(expense_id) is not None
